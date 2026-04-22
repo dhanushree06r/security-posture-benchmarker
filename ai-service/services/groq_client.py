@@ -1,5 +1,6 @@
 import requests
 import os
+import time
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -14,15 +15,28 @@ HEADERS = {
 }
 
 def call_groq(prompt):
-    data = {
-        "model": "llama-3.3-70b-versatile",
-        "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.3
-    }
+    retries = 3
 
-    response = requests.post(URL, headers=HEADERS, json=data)
+    for attempt in range(retries):
+        try:
+            data = {
+                "model": "llama-3.3-70b-versatile",
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.3
+            }
 
-    if response.status_code == 200:
-        return response.json()["choices"][0]["message"]["content"]
-    else:
-        return "Error: " + response.text
+            response = requests.post(URL, headers=HEADERS, json=data)
+
+            if response.status_code == 200:
+                return response.json()["choices"][0]["message"]["content"]
+
+            else:
+                print(f"Error: {response.status_code} - {response.text}")
+
+        except Exception as e:
+            print(f"Exception: {e}")
+
+        # exponential backoff
+        time.sleep(2 ** attempt)
+
+    return "Failed after retries"
