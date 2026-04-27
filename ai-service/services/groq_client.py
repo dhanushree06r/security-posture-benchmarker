@@ -14,14 +14,23 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
-def call_groq(prompt):
+def load_prompt(user_input):
+    with open("prompts/analyze_prompt.txt", "r") as f:
+        template = f.read()
+    return template.replace("{user_input}", user_input)
+
+
+def call_groq(user_input):
+    prompt = load_prompt(user_input)  # use structured prompt
     retries = 3
 
     for attempt in range(retries):
         try:
             data = {
                 "model": "llama-3.3-70b-versatile",
-                "messages": [{"role": "user", "content": prompt}],
+                "messages": [
+                    {"role": "user", "content": prompt}
+                ],
                 "temperature": 0.3
             }
 
